@@ -3,110 +3,96 @@ package com.example.week10;
 import android.content.Context;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Utility class for reading and parsing movie data from a JSON file.
+ */
 public class JsonUtils {
 
-    public static List<Movie> loadMoviesFromJson(Context context) {
-        List<Movie> movies = new ArrayList<>();
+    private static final String TAG = "JsonUtils";
+
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private JsonUtils() {
+    }
+
+    /**
+     * Loads movie data from the assets folder and converts it into a list of Movie objects.
+     *
+     * @param context the application context used to access assets
+     * @return a list of movies, or an empty list if an error occurs
+     */
+    @NonNull
+    public static List<Movie> loadMoviesFromJson(@NonNull Context context) {
+        List<Movie> movieList = new ArrayList<>();
 
         try {
-            String jsonString = readJsonFile(context, "movies.json");
-            JSONArray jsonArray = new JSONArray(jsonString);
+            InputStream inputStream = context.getAssets().open("movies.json");
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            StringBuilder builder = new StringBuilder();
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                builder.append(line);
+            }
+
+            reader.close();
+
+            JSONArray jsonArray = new JSONArray(builder.toString());
 
             for (int i = 0; i < jsonArray.length(); i++) {
                 try {
                     JSONObject object = jsonArray.getJSONObject(i);
 
-                    String title = null;
+                    String title = object.optString("title", "Unknown Title");
+                    String genre = object.optString("genre", "Unknown Genre");
+                    String poster = object.optString("poster", "placeholder");
+
                     Integer year = null;
-                    String genre = null;
-                    String poster = null;
+                    Object yearObject = object.opt("year");
 
-                    if (object.has("title") && !object.isNull("title")) {
-                        title = object.getString("title");
-                    }
-
-                    if (object.has("year") && !object.isNull("year")) {
-                        Object yearObject = object.get("year");
-
-                        if (yearObject instanceof Integer) {
-                            int parsedYear = (Integer) yearObject;
-                            if (parsedYear > 0) {
-                                year = parsedYear;
-                            }
-                        } else if (yearObject instanceof String) {
-                            try {
-                                int parsedYear = Integer.parseInt((String) yearObject);
-                                if (parsedYear > 0) {
-                                    year = parsedYear;
-                                }
-                            } catch (NumberFormatException e) {
-                                Log.e("JsonUtils", "Invalid year string at index " + i);
-                            }
-                        } else {
-                            Log.e("JsonUtils", "Unsupported year format at index " + i);
+                    if (yearObject instanceof Integer) {
+                        year = (Integer) yearObject;
+                    } else if (yearObject instanceof String) {
+                        try {
+                            year = Integer.parseInt((String) yearObject);
+                        } catch (NumberFormatException e) {
+                            Log.e(TAG, "Invalid year format for movie: " + title);
                         }
                     }
 
-                    if (object.has("genre") && !object.isNull("genre")) {
-                        genre = object.getString("genre");
-                    }
+                    movieList.add(new Movie(title, year, genre, poster));
 
-                    if (object.has("poster") && !object.isNull("poster")) {
-                        poster = object.getString("poster");
-                    }
-
-                    if (title == null && year == null && genre == null && poster == null) {
-                        Log.e("JsonUtils", "Empty movie object at index " + i);
-                        continue;
-                    }
-
-                    Movie movie = new Movie(title, year, genre, poster);
-                    movies.add(movie);
-
-                } catch (JSONException e) {
-                    handleJsonException(e);
+                } catch (Exception e) {
+                    handleJsonException("Error parsing movie object", e);
                 }
             }
 
-        } catch (IOException e) {
-            handleJsonException(e);
-        } catch (JSONException e) {
-            handleJsonException(e);
         } catch (Exception e) {
-            handleJsonException(e);
+            handleJsonException("Error loading JSON file", e);
         }
 
-        return movies;
+        return movieList;
     }
 
-    private static String readJsonFile(Context context, String fileName) throws IOException {
-        StringBuilder builder = new StringBuilder();
-        InputStream inputStream = context.getAssets().open(fileName);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-
-        String line;
-        while ((line = reader.readLine()) != null) {
-            builder.append(line);
-        }
-
-        reader.close();
-        inputStream.close();
-
-        return builder.toString();
-    }
-
-    public static void handleJsonException(Exception exception) {
-        Log.e("JsonUtils", "Error while loading JSON: " + exception.getMessage(), exception);
+    /**
+     * Handles exceptions that occur during JSON reading or parsing.
+     *
+     * @param message a custom message describing the error
+     * @param e the exception that occurred
+     */
+    private static void handleJsonException(@NonNull String message, @NonNull Exception e) {
+        Log.e(TAG, message, e);
     }
 }
