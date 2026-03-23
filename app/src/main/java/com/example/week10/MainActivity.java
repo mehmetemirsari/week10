@@ -3,53 +3,53 @@ package com.example.week10;
 import android.os.Bundle;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Main activity that displays a list of movies using a RecyclerView.
+ */
 public class MainActivity extends AppCompatActivity {
-    private RecyclerView movieRecyclerView;
-    private MovieAdapter adapter;
-    private List<Movie> movies;
 
+    private RecyclerView recyclerViewMovies;
+
+    /**
+     * Called when the activity is created.
+     * Initializes the RecyclerView and loads movie data from JSON.
+     *
+     * @param savedInstanceState the saved instance state bundle
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        movieRecyclerView = findViewById(R.id.movieRecyclerView);
-        movies = new ArrayList<>();
+        recyclerViewMovies = findViewById(R.id.recyclerViewMovies);
+        recyclerViewMovies.setLayoutManager(new LinearLayoutManager(this));
 
-        setupRecyclerView();
         loadMovieData();
     }
 
-    private void setupRecyclerView() {
-        movieRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new MovieAdapter(movies);
-        movieRecyclerView.setAdapter(adapter);
-    }
-
+    /**
+     * Loads movie data from the JSON file and displays it in the RecyclerView.
+     * Shows a Toast message if no valid data is found or if an error occurs.
+     */
     private void loadMovieData() {
         try {
-            List<Movie> loadedMovies = JsonUtils.loadMoviesFromJson(this);
+            List<Movie> movieList = JsonUtils.loadMoviesFromJson(this);
 
-            if (loadedMovies == null || loadedMovies.isEmpty()) {
-                showError("No valid movie data found.");
-                return;
+            if (movieList.isEmpty()) {
+                Toast.makeText(this, "No valid movie data found.", Toast.LENGTH_LONG).show();
+            } else {
+                MovieAdapter adapter = new MovieAdapter(movieList);
+                recyclerViewMovies.setAdapter(adapter);
             }
-
-            adapter.updateMovies(loadedMovies);
-
         } catch (Exception e) {
-            showError("Error loading movie data.");
+            Toast.makeText(this, "Error loading movie data.", Toast.LENGTH_LONG).show();
         }
-    }
-
-    private void showError(String message) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show();
     }
 }
