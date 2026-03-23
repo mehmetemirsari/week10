@@ -1,7 +1,5 @@
 package com.example.week10;
 
-
-
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -9,40 +7,54 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+/**
+ * ViewHolder for displaying a single movie item in the RecyclerView.
+ */
 public class MovieViewHolder extends RecyclerView.ViewHolder {
-    private ImageView posterImageView;
-    private TextView titleTextView;
-    private TextView yearTextView;
-    private TextView genreTextView;
 
+    private final ImageView imageViewPoster;
+    private final TextView textViewTitle;
+    private final TextView textViewYear;
+    private final TextView textViewGenre;
+
+    /**
+     * Creates a new MovieViewHolder and initializes its views.
+     *
+     * @param itemView the item view for this holder
+     */
     public MovieViewHolder(@NonNull View itemView) {
         super(itemView);
-        posterImageView = itemView.findViewById(R.id.posterImageView);
-        titleTextView = itemView.findViewById(R.id.titleTextView);
-        yearTextView = itemView.findViewById(R.id.yearTextView);
-        genreTextView = itemView.findViewById(R.id.genreTextView);
+        imageViewPoster = itemView.findViewById(R.id.imageViewPoster);
+        textViewTitle = itemView.findViewById(R.id.textViewTitle);
+        textViewYear = itemView.findViewById(R.id.textViewYear);
+        textViewGenre = itemView.findViewById(R.id.textViewGenre);
     }
 
-    public void bind(Movie movie) {
-        titleTextView.setText(movie.getTitle());
-        genreTextView.setText(movie.getGenre());
+    /**
+     * Binds a Movie object to the views in this ViewHolder.
+     *
+     * @param movie the movie to display
+     */
+    public void bind(@NonNull Movie movie) {
+        textViewTitle.setText(movie.getTitle());
+        textViewGenre.setText(movie.getGenre());
 
-        if (movie.getYear() == null) {
-            yearTextView.setText("Unknown Year");
+        if (movie.getYear() != null) {
+            textViewYear.setText(String.valueOf(movie.getYear()));
         } else {
-            yearTextView.setText(String.valueOf(movie.getYear()));
+            textViewYear.setText("Unknown Year");
         }
 
-        int imageResId = itemView.getContext().getResources().getIdentifier(
+        int resId = itemView.getContext().getResources().getIdentifier(
                 movie.getPosterResource(),
                 "drawable",
                 itemView.getContext().getPackageName()
         );
 
-        if (imageResId == 0) {
-            posterImageView.setImageResource(R.drawable.placeholder);
+        if (resId != 0) {
+            imageViewPoster.setImageResource(resId);
         } else {
-            posterImageView.setImageResource(imageResId);
+            imageViewPoster.setImageResource(R.drawable.placeholder);
         }
     }
 }
